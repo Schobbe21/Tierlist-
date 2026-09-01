@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grammatik-Tierlist</title>
+<style>
+  :root{
+    --bg:#171816;
+    --panel:#20211f;
+    --line:#090a09;
+    --text:#f4f1e9;
+    --muted:#a8aaa3;
+    --border:#343630;
+    --shadow:0 18px 50px rgba(0,0,0,.28);
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .app{
+    width:min(1180px, 94vw);
+    margin:28px auto 42px;
+  }
+
+  .topbar{
+    display:flex;
+    gap:18px;
+    align-items:end;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+
+  .title-wrap h1{
+    margin:0 0 5px;
+    font-size:clamp(1.7rem, 3vw, 2.5rem);
+    letter-spacing:-.04em;
+  }
+
+  .title-wrap p{
+    margin:0;
+    color:var(--muted);
+    font-size:.96rem;
+  }
+
+  .class-switch{
+    display:flex;
+    background:#10110f;
+    padding:5px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    gap:5px;
+  }
+
+  .class-btn{
+    border:0;
+    background:transparent;
+    color:var(--muted);
+    padding:10px 17px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:750;
+    font-size:.95rem;
+  }
+
+  .class-btn.active{
+    background:#f4f1e9;
+    color:#141512;
+  }
+
+  .topic-card,
+  .notes-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+  }
+
+  .topic-card{
+    padding:14px 16px;
+    margin-bottom:16px;
+  }
+
+  label{
+    display:block;
+    color:var(--muted);
+    font-size:.8rem;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    margin-bottom:7px;
+  }
+
+  input, textarea{
+    width:100%;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:var(--text);
+    font:inherit;
+  }
+
+  #topic{
+    font-size:1.2rem;
+    font-weight:750;
+    padding:2px 0 3px;
+  }
+
+  #topic::placeholder, textarea::placeholder{
+    color:#666962;
+  }
+
+  .tierlist{
+    overflow:hidden;
+    border:1px solid #050605;
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    background:#11120f;
+    margin-bottom:16px;
+  }
+
+  .tier-row{
+    display:grid;
+    grid-template-columns:124px 1fr;
+    min-height:78px;
+    border-bottom:2px solid #080908;
+    user-select:none;
+  }
+  .tier-row:last-child{border-bottom:0}
+
+  .tier-label{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#20211f;
+    font-size:1.3rem;
+    font-weight:850;
+    border-right:2px solid #080908;
+  }
+
+  .s{background:#ff7b7f}
+  .a{background:#ffbc7d}
+  .b{background:#ffdd86}
+  .c{background:#fff982}
+  .d{background:#adf476}
+  .e{background:#72e7e7}
+  .f{background:#7478ea}
+
+  .track{
+    position:relative;
+    cursor:pointer;
+    background:#1a1b18;
+    overflow:hidden;
+  }
+
+  .track:hover{background:#1d1f1b}
+  .track:active{background:#22241f}
+
+  .bar{
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:0;
+    opacity:.82;
+    transition:width .18s ease;
+  }
+
+  .track-content{
+    position:relative;
+    z-index:2;
+    min-height:78px;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:12px;
+    padding:0 18px;
+  }
+
+  .count{
+    min-width:42px;
+    height:42px;
+    display:grid;
+    place-items:center;
+    border-radius:11px;
+    background:rgba(0,0,0,.36);
+    color:#fff;
+    font-size:1.13rem;
+    font-weight:850;
+    font-variant-numeric:tabular-nums;
+    backdrop-filter:blur(4px);
+  }
+
+  .minus{
+    width:36px;
+    height:36px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(0,0,0,.26);
+    color:#fff;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:1.25rem;
+    line-height:1;
+    opacity:.7;
+  }
+  .minus:hover{opacity:1;background:rgba(0,0,0,.4)}
+
+  .hint{
+    position:absolute;
+    left:18px;
+    color:#858880;
+    font-size:.85rem;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .15s ease;
+  }
+  .track:hover .hint{opacity:1}
+
+  .notes-card{
+    padding:16px;
+  }
+
+  textarea{
+    resize:vertical;
+    min-height:120px;
+    line-height:1.5;
+    font-size:1rem;
+  }
+
+  .footer-actions{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:center;
+    margin-top:15px;
+    flex-wrap:wrap;
+  }
+
+  .save-status{
+    color:var(--muted);
+    font-size:.86rem;
+  }
+
+  .actions{
+    display:flex;
+    gap:8px;
+  }
+
+  .action{
+    border:1px solid var(--border);
+    background:#232520;
+    color:var(--text);
+    padding:9px 13px;
+    border-radius:9px;
+    cursor:pointer;
+    font-weight:700;
+  }
+  .action:hover{background:#2a2d27}
+  .danger{color:#ffaaa9}
+
+  @media (max-width:650px){
+    .app{width:100%; margin:0; padding:14px}
+    .tier-row{grid-template-columns:74px 1fr; min-height:68px}
+    .track-content{min-height:68px;padding:0 10px}
+    .hint{display:none}
+    .tier-label{font-size:1.1rem}
+    .count{width:38px;height:38px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="title-wrap">
+      <h1>Grammatik-Tierlist</h1>
+      <p>Klick auf eine Reihe = ein guter Satz.</p>
+    </div>
+
+    <div class="class-switch" aria-label="Klasse wählen">
+      <button class="class-btn active" data-class="class1">Klasse 1</button>
+      <button class="class-btn" data-class="class2">Klasse 2</button>
+    </div>
+  </div>
+
+  <section class="topic-card">
+    <label for="topic">Thema</label>
+    <input id="topic" type="text" placeholder="z. B. Wechselpräpositionen">
+  </section>
+
+  <main class="tierlist" id="tierlist">
+    <div class="tier-row" data-tier="S">
+      <div class="tier-label s">S</div>
+      <div class="track">
+        <div class="bar s"></div><span class="hint">Klicken zum Hinzufügen</span>
+        <div class="track-content"><span class="count">0</span><button class="minus" title="Einen Punkt entfernen">−</button></div>
+      </div>
+    </div>
+    <div class="tier-row" data-tier="A">
+      <div class="tier-label a">A</div>
+      <div class="track">
+        <div class="bar a"></div><span class="hint">Klicken zum Hinzufügen</span>
+        <div class="track-content"><span class="count">0</span><button class="minus" title="Einen Punkt entfernen">−</button></div>
+      </div>
+    </div>
+    <div class="tier-row" data-tier="B">
+      <div class="tier-label b">B</div>
+      <div class="track">
+        <div class="bar b"></div><span class="hint">Klicken zum Hinzufügen</span>
+        <div class="track-content"><span class="count">0</span><button class="minus" title="Einen Punkt entfernen">−</button></div>
+      </div>
+    </div>
+    <div class="tier-row" data-tier="C">
+      <div class="tier-label c">C</div>
+      <div class="track">
+        <div class="bar c"></div><span class="hint">Klicken zum Hinzufügen</span>
+        <div class="track-content"><span class="count">0</span><button class="minus" title="Einen Punkt entfernen">−</button></div>
+      </div>
+    </div>
+    <div class="tier-row" data-tier="D">
+      <div class="tier-label d">D</div>
+      <div class="track">
+        <div class="bar d"></div><span class="hint">Klicken zum Hinzufügen</span>
+        <div class="track-content"><span class="count">0</span><button class="minus" title="Einen Punkt entfernen">−</button></div>
+      </div>
+    </div>
+    <div class="tier-row" data-tier="E">
+      <div class="tier-label e">E</div>
+      <div class="track">
+        <div class="bar e"></div><span class="hint">Klicken zum Hinzufügen</span>
+        <div class="track-content"><span class="count">0</span><button class="minus" title="Einen Punkt entfernen">−</button></div>
+      </div>
+    </div>
+    <div class="tier-row" data-tier="F">
+      <div class="tier-label f">F</div>
+      <div class="track">
+        <div class="bar f"></div><span class="hint">Klicken zum Hinzufügen</span>
+        <div class="track-content"><span class="count">0</span><button class="minus" title="Einen Punkt entfernen">−</button></div>
+      </div>
+    </div>
+  </main>
+
+  <section class="notes-card">
+    <label for="notes">Notizen</label>
+    <textarea id="notes" placeholder="Was lief gut? Wo gab es Probleme?"></textarea>
+
+    <div class="footer-actions">
+      <span class="save-status" id="saveStatus">Automatisch im Browser gespeichert</span>
+      <div class="actions">
+        <button class="action" id="undoBtn">↶ Rückgängig</button>
+        <button class="action danger" id="resetBtn">Zurücksetzen</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const TIERS = ["S","A","B","C","D","E","F"];
+  const STORAGE_KEY = "grammatikTierlist_v1";
+  let currentClass = "class1";
+  let history = [];
+
+  const emptyState = () => ({
+    topic: "",
+    notes: "",
+    counts: Object.fromEntries(TIERS.map(t => [t, 0]))
+  });
+
+  function loadAll(){
+    try{
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if(stored?.class1 && stored?.class2) return stored;
+    }catch(e){}
+    return {class1: emptyState(), class2: emptyState()};
+  }
+
+  let data = loadAll();
+
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const el = document.getElementById("saveStatus");
+    el.textContent = "Gespeichert";
+    clearTimeout(save._t);
+    save._t = setTimeout(() => el.textContent = "Automatisch im Browser gespeichert", 900);
+  }
+
+  function snapshot(){
+    history.push(JSON.stringify(data[currentClass]));
+    if(history.length > 30) history.shift();
+  }
+
+  function render(){
+    const state = data[currentClass];
+    document.getElementById("topic").value = state.topic;
+    document.getElementById("notes").value = state.notes;
+
+    document.querySelectorAll(".class-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.class === currentClass);
+    });
+
+    document.querySelectorAll(".tier-row").forEach(row => {
+      const tier = row.dataset.tier;
+      const count = state.counts[tier] || 0;
+      row.querySelector(".count").textContent = count;
+
+      // 1 Punkt = 4,5 % der verfügbaren Breite; ab 23 Punkten ist die Reihe voll.
+      const percent = Math.min(count * 4.5, 100);
+      row.querySelector(".bar").style.width = percent + "%";
+    });
+  }
+
+  function changeCount(tier, delta){
+    snapshot();
+    data[currentClass].counts[tier] = Math.max(0, (data[currentClass].counts[tier] || 0) + delta);
+    save();
+    render();
+  }
+
+  document.querySelectorAll(".track").forEach(track => {
+    track.addEventListener("click", (e) => {
+      if(e.target.closest(".minus")) return;
+      const tier = track.closest(".tier-row").dataset.tier;
+      changeCount(tier, 1);
+    });
+  });
+
+  document.querySelectorAll(".minus").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const tier = btn.closest(".tier-row").dataset.tier;
+      changeCount(tier, -1);
+    });
+  });
+
+  document.querySelectorAll(".class-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentClass = btn.dataset.class;
+      history = [];
+      render();
+    });
+  });
+
+  document.getElementById("topic").addEventListener("input", e => {
+    data[currentClass].topic = e.target.value;
+    save();
+  });
+
+  document.getElementById("notes").addEventListener("input", e => {
+    data[currentClass].notes = e.target.value;
+    save();
+  });
+
+  document.getElementById("undoBtn").addEventListener("click", () => {
+    if(!history.length) return;
+    data[currentClass] = JSON.parse(history.pop());
+    save();
+    render();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    const label = currentClass === "class1" ? "Klasse 1" : "Klasse 2";
+    if(!confirm(label + " wirklich zurücksetzen? Thema, Punkte und Notizen werden gelöscht.")) return;
+    snapshot();
+    data[currentClass] = emptyState();
+    save();
+    render();
+  });
+
+  // Tastatur: S–F erhöht die entsprechende Reihe.
+  document.addEventListener("keydown", e => {
+    if(["INPUT","TEXTAREA"].includes(document.activeElement.tagName)) return;
+    const key = e.key.toUpperCase();
+    if(TIERS.includes(key)) changeCount(key, 1);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
